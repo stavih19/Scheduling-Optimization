@@ -1,0 +1,129 @@
+import csv
+
+from ortools.linear_solver import pywraplp
+
+from day_mapping import get_date
+
+
+def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
+          soldiers_constrains_and_ranks_by_id):
+    # get tables from files
+    shifts_table, rank_soldier, rank_tasks, costs_tasks, num_days, num_soldier, num_tasks, soldiers_constrains_and_ranks_by_id = create_tabeks_from_files(
+        ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
+        soldiers_constrains_and_ranks_by_id)
+    # Create the mip solver with the SCIP backend.
+    model = pywraplp.Solver.CreateSolver('SCIP')
+    # Variables
+    x = setting_variables(num_days, num_soldier, num_tasks, shifts_table, model)
+    # Constraints
+    setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, x, model)
+    # Objective
+    setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model)
+    # Solve
+    solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
+               soldiers_constrains_and_ranks_by_id)
+
+
+def create_tabeks_from_files(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
+                             soldiers_constrains_and_ranks_by_id):
+    shifts_table = tasks_by_day
+    rank_soldier = ranks_of_soldiers
+    rank_tasks = ranks_constrains_by_ids_tasks
+    costs_tasks = values_by_ids_tasks
+    num_days = 186
+    num_soldier = len(ranks_of_soldiers)
+    num_tasks = len(ranks_constrains_by_ids_tasks)
+
+    return shifts_table, rank_soldier, rank_tasks, costs_tasks, num_days, num_soldier, num_tasks, soldiers_constrains_and_ranks_by_id
+
+
+def setting_variables(num_days, num_soldier, num_tasks, shifts_table, model):
+    # x[soldier, task, date] is an array of 0-1 variables
+    # which will be 1 if the soldier is assigned to this task in this date.
+    x = {}
+    for soldier in range(num_soldier):
+        for date in range(num_days):
+            for task in range(num_tasks):
+                for i in range(shifts_table[date][task][1]):
+                    x[soldier, task, i, date] = model.IntVar(0, 1, '')
+    return x
+
+
+def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, x,
+                        model):
+    # Each (soldier, date) is assigned to at most one task.
+
+    for soldier in range(num_soldier):
+
+        for date in range(num_days):
+            total_task_for_soldier = 0
+            for task in range(num_tasks):
+                for i in range(shifts_table[date][task][1]):
+                    total_task_for_soldier += x[soldier, task, i, date]
+            model.Add(total_task_for_soldier <= 1)
+
+    # Each (task,day) is assigned to exactly one worker.
+    for date in range(num_days):
+        for task in range(num_tasks):
+            if (shifts_table[date][task][0] == 1):
+                for i in range(shifts_table[date][task][1]):
+                    model.Add(model.Sum([x[soldier, task, i, date] for soldier in range(num_soldier)]) == 1)
+
+    # Any soldier with rank X can be assigned to task with rank<X
+    for date in range(num_days):
+        for task in range(num_tasks):
+            # rank = rank_tasks[task]
+            rank = rank_tasks.get(task)
+            for i in range(shifts_table[date][task][1]):
+                for soldier in range(num_soldier):
+                    if rank_soldier[soldier] < rank:
+                        model.Add(x[soldier, task, i, date] == 0)
+
+    # Each soldier can accumulate maximum of 200 points
+    for soldier in range(num_soldier):
+        max_soldier_score = 0
+        for date in range(num_days):
+            for task in range(num_tasks):
+                for i in range(shifts_table[date][task][1]):
+                    max_soldier_score = max_soldier_score + costs_tasks[task] * x[soldier, task, i, date]
+        model.Add(max_soldier_score <= 10000)
+
+
+def setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model):
+    objective_worker_score = []
+    for soldier in range(num_soldier):
+        worker_score = 0
+        for date in range(num_days):
+            for task in range(num_tasks):
+                for i in range(shifts_table[date][task][1]):
+                    worker_score = worker_score + (costs_tasks[task] * x[soldier, task, i, date])
+        objective_worker_score.append(worker_score)
+    sum_score = 0
+    for worker_score in objective_worker_score:
+        sum_score += worker_score
+    model.Minimize(sum_score)
+
+
+def solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
+               soldiers_constrains_and_ranks_by_id):
+    # Solve
+    status = model.Solve()
+    # Print solution
+    if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
+        print('solution:')
+        with open('soldiers_shifts.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Date", "Task_ID", "Soldier_ID"])
+            print('Total cost = ', model.Objective().Value(), '\n')
+            for date in range(num_days):
+                for task in range(num_tasks):
+                    for i in range(shifts_table[date][task][1]):
+                        for soldier in range(len(soldiers_constrains_and_ranks_by_id)):
+                            # Test if x[soldier, task, date] is 1 (with tolerance for floating point arithmetic).
+                            if x[soldier, task, i, date].solution_value() > 0.5:
+                                print('Worker %d assigned to task %d in day %d.  Cost = %d' %
+                                      (soldier, task, date, costs_tasks[task]))
+                                ids = soldiers_constrains_and_ranks_by_id[soldier][0]
+                                date_time = get_date(date)
+                                writer.writerow([ids, date_time, task])
+    pass
