@@ -5,17 +5,19 @@ from soldiers_shifts import solve
 
 def get_tasks_dictionary(tasks_ids_file):
     tasks_ids_matrix = {}
+    tasks_name = []
     tasks_values = []
     with open(tasks_ids_file, encoding="utf8") as file:
         reader = csv.reader(file)
         fields = next(reader)
         for line in reader:
             t_id = int(line[0])
+            tasks_name.append(line[1])
             t_value = int(line[2])
             category_id_list = int(line[3])
             tasks_ids_matrix[t_id] = category_id_list
             tasks_values.append(t_value)
-    return tasks_ids_matrix, tasks_values
+    return tasks_ids_matrix, tasks_values, tasks_name
 
 
 def get_tasks_matrix(tasks_list_file, task):
@@ -72,12 +74,13 @@ def get_soldiers_list_file(file_name):
 
 
 def run(tasks_list_file, tasks_ids_file, soldiers_list_file):
-    tasks_ids_file = tasks_ids_file.split("/")[-1]
-    tasks_list_file = tasks_list_file.split("/")[-1]
-    soldiers_list_file = soldiers_list_file.split("/")[-1]
+    # tasks_ids_file = tasks_ids_file.split("/")[-1]
+    # tasks_list_file = tasks_list_file.split("/")[-1]
+    # soldiers_list_file = soldiers_list_file.split("/")[-1]
 
-    ranks_constrains_by_ids_tasks, values_by_ids_tasks = get_tasks_dictionary(tasks_ids_file)
+    ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_name = get_tasks_dictionary(tasks_ids_file)
     tasks_by_day = get_tasks_matrix(tasks_list_file, len(values_by_ids_tasks))
     ranks_of_soldiers, soldiers_constrains_and_ranks_by_id = get_soldiers_list(soldiers_list_file)
+
     solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
-          soldiers_constrains_and_ranks_by_id)
+          soldiers_constrains_and_ranks_by_id, tasks_name)
