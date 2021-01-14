@@ -36,20 +36,20 @@ def get_tasks_list_file(csv_id, number_of_tasks_id, number_of_tasks):
     return file_name
 
 
-def get_soldiers_file(csv_id, number_of_soldiers):
+def get_soldiers_file(csv_id, number_of_soldiers, number_of_tasks_id):
     file_name = 'csv files/soldiers_list' + str(csv_id) + '.csv'
     with open(file_name, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["ID", "Rank", "constraints_task_id"])
         for i in range(number_of_soldiers):
-            writer.writerow([random_soldiers_id(), random.randint(1, 4), random.randint(1, 4)])
+            writer.writerow([random_soldiers_id(), random.randint(1, number_of_tasks_id), random.randint(1, 4)])
     return file_name
 
 
 def get_csvs(csv_id, number_of_tasks_id, number_of_tasks, number_of_soldiers):
     tasks_ids_csv = get_tasks_id_file(csv_id, number_of_tasks_id)
     tasks_list_csv = get_tasks_list_file(csv_id, number_of_tasks_id, number_of_tasks)
-    tasks_soldiers_csv = get_soldiers_file(csv_id, number_of_soldiers)
+    tasks_soldiers_csv = get_soldiers_file(csv_id, number_of_soldiers, number_of_tasks_id)
 
     return tasks_ids_csv, tasks_list_csv, tasks_soldiers_csv
 
@@ -63,7 +63,7 @@ def main():
     number_of_tasks = 13 * number_of_soldiers
     time_couples_averages = []
     print("seconds" + " " + "id" + " " + "so" + " " + "tasks" + " " + "limit")
-    with open('output.csv', 'w', encoding="utf-8", newline='') as file:
+    with open('Outputs/output_tasks.csv', 'w', encoding="utf-8", newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["Seconds", "Task id", "Soldiers numbers", "Number of tasks", "limit"])
         for i in range(num_examples):
@@ -90,7 +90,7 @@ def main():
 
             # number_of_tasks_id += 2
             number_of_soldiers += 5
-            # number_of_tasks += (13 * 5)
+            number_of_tasks += (13 * 5)
         print(time_couples_averages)
 
 

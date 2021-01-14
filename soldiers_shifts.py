@@ -15,7 +15,7 @@ def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, ran
 
     # Constraints
     setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier,
-                        x, model, limit)
+                        x, model, limit, soldiers_constrains_and_ranks_by_id)
     # Objective
     setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model)
     # Solve
@@ -113,10 +113,22 @@ def setting_variables(num_days, num_soldier, num_tasks, shifts_table, model):
 
 
 def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, x,
-                        model, objective_max):
+                        model, objective_max, soldiers_constrains_and_ranks_by_id):
+    # soldiers who cannot perform certain tasks
+    for soldier in range(num_soldier):
+        list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
+        for forbidden_task in list_of_forbidden_tasks:
+            for task in range(num_tasks):
+                if (int(forbidden_task) == task):
+                    for date in range(num_days):
+                        for i in range(shifts_table[date][task][1]):
+                            model.Add(x[soldier, task, i, date] == 0)
+
+
+
+
     # Each (soldier, date) is assigned to at most one task.
     for soldier in range(num_soldier):
-
         for date in range(num_days):
             total_task_for_soldier = 0
             for task in range(num_tasks):
@@ -176,7 +188,7 @@ def solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
         with open('soldiers_shifts.csv', 'w', encoding="utf-8", newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Date", "Task_ID", "Soldier_ID"])
-            # print('Total cost = ', model.Objective().Value(), '\n')
+            print('Total cost = ', model.Objective().Value(), '\n')
             for date in range(num_days):
                 for task in range(num_tasks):
                     for i in range(shifts_table[date][task][1]):
