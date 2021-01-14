@@ -22,7 +22,7 @@ def get_tasks_id_file(csv_id, number_of_tasks_id):
         writer = csv.writer(file)
         writer.writerow(["ID", "Name", "Value", "Rank"])
         for i in range(number_of_tasks_id):
-            writer.writerow([i, "task" + str(i), random.randint(1, 30), random.randint(1, 4)])
+            writer.writerow([i, "task" + str(i), random.randint(1, 10), random.randint(1, 4)])
     return file_name
 
 
@@ -55,31 +55,43 @@ def get_csvs(csv_id, number_of_tasks_id, number_of_tasks, number_of_soldiers):
 
 
 def main():
-    num_examples = 10
-    number_of_tasks_id = 10
-    number_of_soldiers = 10
-    number_of_tasks = 26 * number_of_soldiers
-    time_couples_averages = []
-    print("seconds" + " " + "id" + " " + "so" + " " + "tasks")
-    for i in range(num_examples):
-        time_couples = []
-        tasks_ids_file, tasks_list_file, tasks_soldiers_file = get_csvs(i, number_of_tasks_id, number_of_tasks,
-                                                                        number_of_soldiers)
-        for j in range(10):
-            start_time = time.time()
-            run(tasks_list_file, tasks_ids_file, tasks_soldiers_file)
-            end_time = time.time()
-            time_couples.append(end_time - start_time)
-            # print(end_time - start_time)
-        average = sum(time_couples) / 10
-        time_couples_averages.append(average)
-        print(str(average)[:4] + "    " + str(number_of_tasks_id) + " " + str(number_of_soldiers) + " " + str(
-            number_of_tasks))
+    average_num = 5
 
-        number_of_tasks_id += 2
-        number_of_soldiers += 5
-        number_of_tasks = 26 * number_of_soldiers
-    print(time_couples_averages)
+    num_examples = 10
+    number_of_tasks_id = 20
+    number_of_soldiers = 10
+    number_of_tasks = 13 * number_of_soldiers
+    time_couples_averages = []
+    print("seconds" + " " + "id" + " " + "so" + " " + "tasks" + " " + "limit")
+    with open('output.csv', 'w', encoding="utf-8", newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Seconds", "Task id", "Soldiers numbers", "Number of tasks", "limit"])
+        for i in range(num_examples):
+            time_couples = []
+            limits = []
+            for j in range(average_num):
+                tasks_ids_file, tasks_list_file, tasks_soldiers_file = get_csvs(i, number_of_tasks_id, number_of_tasks,
+                                                                                number_of_soldiers)
+                start_time = time.time()
+                limit = run(tasks_list_file, tasks_ids_file, tasks_soldiers_file)
+                limits.append(limit)
+                end_time = time.time()
+                time_couples.append(end_time - start_time)
+                # print(str(end_time - start_time)[:4] + "    " + str(number_of_tasks_id) + " " + str(
+                #    number_of_soldiers) + " " + str(number_of_tasks) + "   " + str(limit))
+            average = sum(time_couples) / average_num
+            print(str(average)[:4] + "    " + str(number_of_tasks_id) + " " + str(
+                number_of_soldiers) + " " + str(number_of_tasks) + "   " + str(
+                sum(limits) / average_num) + "   average")
+            time_couples_averages.append(average)
+
+            writer.writerow([str(average)[:4], str(number_of_tasks_id), str(number_of_soldiers), str(number_of_tasks),
+                             str(sum(limits) / average_num)])
+
+            # number_of_tasks_id += 2
+            number_of_soldiers += 5
+            # number_of_tasks += (13 * 5)
+        print(time_couples_averages)
 
 
 main()

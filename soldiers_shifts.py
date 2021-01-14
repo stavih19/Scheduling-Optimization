@@ -6,6 +6,23 @@ from ortools.linear_solver import pywraplp
 from day_mapping import get_date
 
 
+def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, limit,
+                soldiers_constrains_and_ranks_by_id, tasks_name):
+    # Create the mip solver with the SCIP backend.
+    model = pywraplp.Solver.CreateSolver('SCIP')
+    # Variables
+    x = setting_variables(num_days, num_soldier, num_tasks, shifts_table, model)
+
+    # Constraints
+    setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier,
+                        x, model, limit)
+    # Objective
+    setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model)
+    # Solve
+    return solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
+                      soldiers_constrains_and_ranks_by_id, tasks_name)
+
+
 def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
           soldiers_constrains_and_ranks_by_id, tasks_name):
     # get tables from files
@@ -22,19 +39,9 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
     while solution is not True:
         jumps = 1
         while limit <= max_limit:
-            # Create the mip solver with the SCIP backend.
-            model = pywraplp.Solver.CreateSolver('SCIP')
-            # Variables
-            x = setting_variables(num_days, num_soldier, num_tasks, shifts_table, model)
-
-            # Constraints
-            setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier,
-                                x, model, limit)
-            # Objective
-            setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model)
-            # Solve
-            answer_flag = solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
-                                     soldiers_constrains_and_ranks_by_id, tasks_name)
+            answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
+                                      rank_soldier, limit,
+                                      soldiers_constrains_and_ranks_by_id, tasks_name)
             if answer_flag:
                 max_limit = prev_limit
                 break
@@ -42,24 +49,14 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
                 prev_limit = limit
                 limit += jumps
                 jumps *= 2
+        if limit > max_limit:
+            limit = max_limit
         jumps = 1
         solution = True
         while limit >= min_limit:
-            # Create the mip solver with the SCIP backend.
-            model = pywraplp.Solver.CreateSolver('SCIP')
-            # Variables
-            x = setting_variables(num_days, num_soldier, num_tasks, shifts_table, model)
-
-            # Constraints
-            setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier,
-                                x,
-                                model,
-                                limit)
-            # Objective
-            setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model)
-            # Solve
-            answer_flag = solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
-                                     soldiers_constrains_and_ranks_by_id, tasks_name)
+            answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
+                                      rank_soldier, limit,
+                                      soldiers_constrains_and_ranks_by_id, tasks_name)
             if answer_flag:
                 prev_limit = limit
                 limit -= jumps
@@ -68,6 +65,7 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
             else:
                 min_limit = prev_limit
                 break
+    return limit
 
 
 def get_limits(shifts_table, costs_tasks, num_soldier):

@@ -82,5 +82,6 @@ def run(tasks_list_file, tasks_ids_file, soldiers_list_file):
     tasks_by_day = get_tasks_matrix(tasks_list_file, len(values_by_ids_tasks))
     ranks_of_soldiers, soldiers_constrains_and_ranks_by_id = get_soldiers_list(soldiers_list_file)
 
-    solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
-          soldiers_constrains_and_ranks_by_id, tasks_name)
+    limit = solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
+                  soldiers_constrains_and_ranks_by_id, tasks_name)
+    return limit
