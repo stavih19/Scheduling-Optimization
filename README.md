@@ -11,11 +11,24 @@ pip install ortools
 pip install tkinter
 ```
 
-## Download
+## Download and Run
 
-Download from master the zip directory.
+Download from master the zip directory and run:
 
-Run "run.bat" in the inner directory.
+```bash
+python main.py
+```
+
+## Use
+After main page opening, attach the appropriate file as needed:
+
+- 'tasks_list.csv'
+- 'tasks_ids.csv'
+- 'soldiers_list.csv'
+
+Click 'continue' and wait for the run to finish.
+
+The solution will be at the 'soldiers_shifts.csv' file.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
