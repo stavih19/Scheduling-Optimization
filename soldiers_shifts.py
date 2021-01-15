@@ -38,13 +38,12 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
 
     while solution is not True:
         jumps = 1
-        while limit <= max_limit:
+        while limit < max_limit:
             answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
                                       rank_soldier, limit,
                                       soldiers_constrains_and_ranks_by_id, tasks_name)
             if answer_flag:
                 max_limit = prev_limit
-                break
             else:
                 prev_limit = limit
                 limit += jumps
@@ -53,7 +52,7 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
             limit = max_limit
         jumps = 1
         solution = True
-        while limit >= min_limit:
+        while limit > min_limit:
             answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
                                       rank_soldier, limit,
                                       soldiers_constrains_and_ranks_by_id, tasks_name)
@@ -64,7 +63,6 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
                 solution = False
             else:
                 min_limit = prev_limit
-                break
     return limit
 
 
@@ -123,9 +121,6 @@ def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_ta
                     for date in range(num_days):
                         for i in range(shifts_table[date][task][1]):
                             model.Add(x[soldier, task, i, date] == 0)
-
-
-
 
     # Each (soldier, date) is assigned to at most one task.
     for soldier in range(num_soldier):
@@ -188,7 +183,7 @@ def solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
         with open('soldiers_shifts.csv', 'w', encoding="utf-8", newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Date", "Task_ID", "Soldier_ID"])
-            print('Total cost = ', model.Objective().Value(), '\n')
+            # print('Total cost = ', model.Objective().Value(), '\n')
             for date in range(num_days):
                 for task in range(num_tasks):
                     for i in range(shifts_table[date][task][1]):
