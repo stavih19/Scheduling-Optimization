@@ -180,7 +180,7 @@ def solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
         # print('solution:')
         with open('soldiers_shifts.csv', 'w', encoding="utf-8", newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Date", "Task_ID", "Soldier_ID"])
+            writer.writerow(["Soldiers ID", "Date", "Task ID"])
             # print('Total cost = ', model.Objective().Value(), '\n')
             for date in range(num_days):
                 for task in range(num_tasks):
