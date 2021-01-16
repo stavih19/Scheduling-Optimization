@@ -34,36 +34,34 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
     min_limit, max_limit, jumps = get_limits(shifts_table, costs_tasks, num_soldier)
     limit = min_limit
     prev_limit = 0
-    solution = False
 
-    while solution is not True:
+    while max_limit - min_limit > 3:
         jumps = 1
         while limit < max_limit:
             answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
                                       rank_soldier, limit,
                                       soldiers_constrains_and_ranks_by_id, tasks_name)
             if answer_flag:
-                max_limit = prev_limit
+                max_limit = limit
             else:
                 prev_limit = limit
                 limit += jumps
                 jumps *= 2
-        if limit > max_limit:
-            limit = max_limit
+        max_limit = limit
+        min_limit = prev_limit
         jumps = 1
-        solution = True
         while limit > min_limit:
             answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
                                       rank_soldier, limit,
                                       soldiers_constrains_and_ranks_by_id, tasks_name)
             if answer_flag:
+                max_limit = limit
                 prev_limit = limit
                 limit -= jumps
                 jumps *= 2
-                solution = False
             else:
-                min_limit = prev_limit
-    return limit
+                min_limit = limit
+    return max_limit
 
 
 def get_limits(shifts_table, costs_tasks, num_soldier):
