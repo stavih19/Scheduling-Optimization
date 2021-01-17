@@ -81,6 +81,8 @@ def clicked_button_choose3(window, eff=None):
 
 def clicked_button_choose4(window, eff=None):
     run(tasks_list_file, tasks_ids_file, soldiers_list_file)
+    print('finish!\n'
+          'open "soldiers_shifts.csv" for solution')
     window.destroy()
 
 
