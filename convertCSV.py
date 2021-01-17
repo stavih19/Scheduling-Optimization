@@ -74,9 +74,19 @@ def get_soldiers_list_file(file_name):
 
 
 def run(tasks_list_file, tasks_ids_file, soldiers_list_file):
-    # tasks_ids_file = tasks_ids_file.split("/")[-1]
-    # tasks_list_file = tasks_list_file.split("/")[-1]
-    # soldiers_list_file = soldiers_list_file.split("/")[-1]
+    tasks_list_file_check = tasks_list_file.split("/")[-1]
+    tasks_ids_file_check = tasks_ids_file.split("/")[-1]
+    soldiers_list_file_check = soldiers_list_file.split("/")[-1]
+
+    if tasks_list_file_check != "tasks_list.csv":
+        print("wrong tasks list file")
+        return 0
+    if tasks_ids_file_check != "tasks_ids.csv":
+        print("wrong tasks ids file")
+        return 0
+    if soldiers_list_file_check != "soldiers_list.csv":
+        print("wrong soldiers list file")
+        return 0
 
     ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_name = get_tasks_dictionary(tasks_ids_file)
     tasks_by_day = get_tasks_matrix(tasks_list_file, len(values_by_ids_tasks))
