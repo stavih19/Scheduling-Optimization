@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from convertCSV import run
+from measurement import measurement
 
 tasks_list_file = None
 tasks_ids_file = None
@@ -80,7 +81,12 @@ def clicked_button_choose3(window, eff=None):
 
 
 def clicked_button_choose4(window, eff=None):
-    run(tasks_list_file, tasks_ids_file, soldiers_list_file)
+    run(tasks_list_file, tasks_ids_file, soldiers_list_file, "first")
+    measurement("first")
+    run(tasks_list_file, tasks_ids_file, soldiers_list_file, "middle")
+    measurement("middle")
+    run(tasks_list_file, tasks_ids_file, soldiers_list_file, "last")
+    measurement("last")
     print('finish!\n'
           'open "soldiers_shifts.csv" for solution')
     window.destroy()

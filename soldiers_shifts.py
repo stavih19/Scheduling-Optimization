@@ -4,10 +4,11 @@ import sys
 from ortools.linear_solver import pywraplp
 
 from day_mapping import get_date
+from measurement import measurement
 
 
 def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, limit,
-                soldiers_constrains_and_ranks_by_id, tasks_name):
+                soldiers_constrains_and_ranks_by_id, tasks_name, index):
     # Create the mip solver with the SCIP backend.
     model = pywraplp.Solver.CreateSolver('SCIP')
     # Variables
@@ -15,7 +16,7 @@ def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, ran
 
     # Constraints
     setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier,
-                        x, model, limit, soldiers_constrains_and_ranks_by_id)
+                        x, model, limit, soldiers_constrains_and_ranks_by_id, index)
     # Objective
     setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model)
     # Solve
@@ -24,7 +25,7 @@ def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, ran
 
 
 def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
-          soldiers_constrains_and_ranks_by_id, tasks_name):
+          soldiers_constrains_and_ranks_by_id, tasks_name, index):
     # get tables from files
     shifts_table, rank_soldier, rank_tasks, costs_tasks, num_days, num_soldier, num_tasks, soldiers_constrains_and_ranks_by_id = create_tabeks_from_files(
         ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
@@ -40,7 +41,7 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
         while limit < max_limit:
             answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
                                       rank_soldier, limit,
-                                      soldiers_constrains_and_ranks_by_id, tasks_name)
+                                      soldiers_constrains_and_ranks_by_id, tasks_name, index)
             if answer_flag:
                 max_limit = limit
             else:
@@ -53,7 +54,7 @@ def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, rank
         while limit > min_limit:
             answer_flag = is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks,
                                       rank_soldier, limit,
-                                      soldiers_constrains_and_ranks_by_id, tasks_name)
+                                      soldiers_constrains_and_ranks_by_id, tasks_name, index)
             if answer_flag:
                 max_limit = limit
                 prev_limit = limit
@@ -109,17 +110,7 @@ def setting_variables(num_days, num_soldier, num_tasks, shifts_table, model):
 
 
 def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, x,
-                        model, objective_max, soldiers_constrains_and_ranks_by_id):
-    # soldiers who cannot perform certain tasks
-    for soldier in range(num_soldier):
-        list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
-        for forbidden_task in list_of_forbidden_tasks:
-            for task in range(num_tasks):
-                if (int(forbidden_task) == task):
-                    for date in range(num_days):
-                        for i in range(shifts_table[date][task][1]):
-                            model.Add(x[soldier, task, i, date] == 0)
-
+                        model, objective_max, soldiers_constrains_and_ranks_by_id, index):
     # Each (soldier, date) is assigned to at most one task.
     for soldier in range(num_soldier):
         for date in range(num_days):
@@ -136,23 +127,61 @@ def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_ta
                 for i in range(shifts_table[date][task][1]):
                     model.Add(model.Sum([x[soldier, task, i, date] for soldier in range(num_soldier)]) == 1)
 
-    # Any soldier with rank X can be assigned to task with rank<X
-    for date in range(num_days):
-        for task in range(num_tasks):
-            # rank = rank_tasks[task]
-            rank = rank_tasks.get(task)
-            for i in range(shifts_table[date][task][1]):
-                for soldier in range(num_soldier):
-                    if rank_soldier[soldier] < rank:
-                        model.Add(x[soldier, task, i, date] == 0)
+    if index == "first":
+        # embed with with the first half indexes preference
+        for soldier in range(num_soldier):
+            list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
+            list_of_forbidden_tasks = list_of_forbidden_tasks[:2]
+            counter = 0
+            for date in range(num_days):
+                for task in list_of_forbidden_tasks:
+                    for i in range(shifts_table[date][task][1]):
+                        counter = counter + x[soldier, task, i, date]
+            model.Add(counter == 1)
 
-    # Each soldier can accumulate maximum of x points
+    if index == "middle":
+        # embed with with the half index preference
+        for soldier in range(num_soldier):
+            list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
+            list_of_forbidden_tasks = list_of_forbidden_tasks[int(len(list_of_forbidden_tasks) / 2):
+                                                              int(len(list_of_forbidden_tasks) / 2) + 1]
+            counter = 0
+            for date in range(num_days):
+                for task in list_of_forbidden_tasks:
+                    for i in range(shifts_table[date][task][1]):
+                        counter = counter + x[soldier, task, i, date]
+            model.Add(counter == 1)
+
+    if index == "last":
+        # embed with with the last index preference
+        for soldier in range(num_soldier):
+            list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
+            list_of_forbidden_tasks = list_of_forbidden_tasks[len(list_of_forbidden_tasks): -1]
+            counter = 0
+            for date in range(num_days):
+                for task in list_of_forbidden_tasks:
+                    for i in range(shifts_table[date][task][1]):
+                        counter = counter + x[soldier, task, i, date]
+            model.Add(counter == 1)
+
+    # All soldier Sum can accumulate maximum of x points
+    max_soldier_score = 0
     for soldier in range(num_soldier):
-        max_soldier_score = 0
         for date in range(num_days):
             for task in range(num_tasks):
                 for i in range(shifts_table[date][task][1]):
                     max_soldier_score = max_soldier_score + costs_tasks[task] * x[soldier, task, i, date]
+    # model.Add(max_soldier_score <= objective_max)
+
+    # Each soldier can accumulate maximum of x points
+    for soldier in range(num_soldier):
+        list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
+        max_soldier_score = 0
+        for date in range(num_days):
+            for task in range(num_tasks):
+                for i in range(shifts_table[date][task][1]):
+                    max_soldier_score = \
+                        max_soldier_score + list_of_forbidden_tasks.index(task) * x[soldier, task, i, date]
         model.Add(max_soldier_score <= objective_max)
 
 
@@ -195,4 +224,5 @@ def solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
                                 writer.writerow([ids, date_time, name])
         return True
     else:
+        # print("Not good")
         return False

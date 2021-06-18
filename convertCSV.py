@@ -73,7 +73,7 @@ def get_soldiers_list_file(file_name):
     print('Selected:', soldiers_list_file)
 
 
-def run(tasks_list_file, tasks_ids_file, soldiers_list_file):
+def run(tasks_list_file, tasks_ids_file, soldiers_list_file, index):
     tasks_list_file_check = tasks_list_file.split("/")[-1]
     tasks_ids_file_check = tasks_ids_file.split("/")[-1]
     soldiers_list_file_check = soldiers_list_file.split("/")[-1]
@@ -93,5 +93,5 @@ def run(tasks_list_file, tasks_ids_file, soldiers_list_file):
     ranks_of_soldiers, soldiers_constrains_and_ranks_by_id = get_soldiers_list(soldiers_list_file)
 
     limit = solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
-                  soldiers_constrains_and_ranks_by_id, tasks_name)
+                  soldiers_constrains_and_ranks_by_id, tasks_name, index)
     return limit
