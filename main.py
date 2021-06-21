@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from convertCSV import run
 from measurement import measurement
+from rendom_Input import generate_input_file
 
 tasks_list_file = None
 tasks_ids_file = None
@@ -98,4 +99,5 @@ def _msgBox(window):
 
 
 if __name__ == '__main__':
+    # generate_input_file()
     main()
