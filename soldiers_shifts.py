@@ -4,7 +4,6 @@ import sys
 from ortools.linear_solver import pywraplp
 
 from day_mapping import get_date
-from measurement import measurement
 
 
 def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, rank_tasks, rank_soldier, limit,
@@ -27,7 +26,7 @@ def is_solution(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, ran
 def solve(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
           soldiers_constrains_and_ranks_by_id, tasks_name, index):
     # get tables from files
-    shifts_table, rank_soldier, rank_tasks, costs_tasks, num_days, num_soldier, num_tasks, soldiers_constrains_and_ranks_by_id = create_tabeks_from_files(
+    shifts_table, rank_soldier, rank_tasks, costs_tasks, num_days, num_soldier, num_tasks, soldiers_constrains_and_ranks_by_id = create_tables_from_files(
         ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
         soldiers_constrains_and_ranks_by_id)
 
@@ -84,7 +83,7 @@ def get_limits(shifts_table, costs_tasks, num_soldier):
     return round(values_counter / num_soldier), values_counter, (jump + 10)
 
 
-def create_tabeks_from_files(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
+def create_tables_from_files(ranks_constrains_by_ids_tasks, values_by_ids_tasks, tasks_by_day, ranks_of_soldiers,
                              soldiers_constrains_and_ranks_by_id):
     shifts_table = tasks_by_day
     rank_soldier = ranks_of_soldiers
@@ -156,7 +155,8 @@ def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_ta
         # embed with with the last index preference
         for soldier in range(num_soldier):
             list_of_forbidden_tasks = soldiers_constrains_and_ranks_by_id[soldier][2]
-            list_of_forbidden_tasks = list_of_forbidden_tasks[len(list_of_forbidden_tasks): -1]
+            list_of_forbidden_tasks = list_of_forbidden_tasks[len(list_of_forbidden_tasks) - 1:
+                                                              len(list_of_forbidden_tasks)]
             counter = 0
             for date in range(num_days):
                 for task in list_of_forbidden_tasks:
@@ -217,7 +217,6 @@ def solve_func(num_days, num_tasks, shifts_table, costs_tasks, x, model,
                         for soldier in range(len(soldiers_constrains_and_ranks_by_id)):
                             # Test if x[soldier, task, date] is 1 (with tolerance for floating point arithmetic).
                             if x[soldier, task, i, date].solution_value() > 0.5:
-                                # print('Worker %d assigned to task %d in day %d.  Cost = %d' %(soldier, task, date, costs_tasks[task]))
                                 ids = soldiers_constrains_and_ranks_by_id[soldier][0]
                                 date_time = get_date(date)
                                 name = tasks_name[task]
