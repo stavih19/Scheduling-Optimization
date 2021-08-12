@@ -1,6 +1,8 @@
+import time
 import tkinter as tk
 from tkinter import filedialog
 from convertCSV import run
+from graph_display import process_values
 from measurement import measurement
 from rendom_Input import generate_input_file
 
@@ -82,14 +84,35 @@ def clicked_button_choose3(window, eff=None):
 
 
 def clicked_button_choose4(window, eff=None):
-    run(tasks_list_file, tasks_ids_file, soldiers_list_file, "first")
-    measurement("first")
-    run(tasks_list_file, tasks_ids_file, soldiers_list_file, "middle")
-    measurement("middle")
-    run(tasks_list_file, tasks_ids_file, soldiers_list_file, "last")
-    measurement("last")
+    single_values, all_values = [], []
+    # tasks = [7, 14, 21, 28, 35]
+    tasks = [5, 11, 17, 23, 29]
+    for task_amount in tasks:
+        print("Amount of task: " + str(task_amount))
+
+        soldiers_list = generate_input_file(task_amount, [])
+
+        run(tasks_list_file, tasks_ids_file, soldiers_list_file, "first")
+        single_measurement, all_measurement = measurement("first")
+        single_values.append(single_measurement)
+        all_values.append(all_measurement)
+
+        # soldiers_list = generate_input_file(task_amount, soldiers_list)
+
+        run(tasks_list_file, tasks_ids_file, soldiers_list_file, "middle")
+        single_measurement, all_measurement = measurement("middle")
+        single_values.append(single_measurement)
+        all_values.append(all_measurement)
+
+        # soldiers_list = generate_input_file(task_amount, soldiers_list)
+
+        run(tasks_list_file, tasks_ids_file, soldiers_list_file, "last")
+        single_measurement, all_measurement = measurement("last")
+        single_values.append(single_measurement)
+        all_values.append(all_measurement)
     print('finish!\n'
           'open "soldiers_shifts.csv" for solution')
+    process_values(tasks, single_values, all_values)
     window.destroy()
 
 
@@ -99,5 +122,4 @@ def _msgBox(window):
 
 
 if __name__ == '__main__':
-    # generate_input_file()
     main()

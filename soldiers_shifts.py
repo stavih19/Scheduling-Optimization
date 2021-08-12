@@ -182,7 +182,7 @@ def setting_constraints(num_days, num_soldier, num_tasks, shifts_table, costs_ta
                 for i in range(shifts_table[date][task][1]):
                     max_soldier_score = \
                         max_soldier_score + list_of_forbidden_tasks.index(task) * x[soldier, task, i, date]
-        model.Add(max_soldier_score <= objective_max)
+        # model.Add(max_soldier_score <= objective_max)
 
 
 def setting_objective(num_days, num_soldier, num_tasks, shifts_table, costs_tasks, x, model):

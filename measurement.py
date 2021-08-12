@@ -1,4 +1,5 @@
 import csv
+import time
 
 
 def get_ids_map(task_ids):
@@ -15,6 +16,7 @@ def get_ids_map(task_ids):
 
 def get_preferences_map(soldiers_list):
     preferences_map = {}
+    # time.sleep(2)
     with open(soldiers_list, encoding="utf8") as file:
         reader = csv.reader(file)
         fields = next(reader)
@@ -40,7 +42,9 @@ def get_measurement(shift_soldiers, ids_map, soldiers_preferences):
             s_id = int(line[0])
             date = line[1]
             t_name = line[2]
-            soldiers_dissatisfaction[s_id] = get_dissatisfaction(ids_map[t_name], soldiers_preferences[s_id])
+            a = ids_map[t_name]
+            b = soldiers_preferences[s_id]
+            soldiers_dissatisfaction[s_id] = get_dissatisfaction(a, b)
             if max_single_dissatisfaction < soldiers_dissatisfaction[s_id]:
                 max_single_dissatisfaction = soldiers_dissatisfaction[s_id]
             all_soldiers_dissatisfaction += soldiers_dissatisfaction[s_id]
@@ -58,3 +62,5 @@ def measurement(index):
 
     print('Measurement for max single soldier in "' + index + '" index method: ' + str(single_measurement))
     print('Measurement for all soldiers in "' + index + '" index method: ' + str(all_measurement))
+
+    return single_measurement, all_measurement
